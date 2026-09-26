@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "apps/web/next.config.js",
+      "use": "@vercel/next",
+      "config": {
+        "includeFiles": ["package.json", "../package.json", "../packages/shared", "../packages/db", "../node_modules"]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "handle": "filesystem"
+    }
+  ]
+}
