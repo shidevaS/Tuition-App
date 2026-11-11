@@ -122,7 +122,7 @@ export default async function DashboardPage() {
 }
 
 /** Admin dashboard - shows overall platform stats */
-function AdminDashboard() {
+async function AdminDashboard() {
   const [users, totalChallenges, totalLessons, totalXP] = await Promise.all([
     prisma.user.findMany({ include: { profile: true } }),
     prisma.challenge.count({ where: { published: true } }),
@@ -132,7 +132,7 @@ function AdminDashboard() {
 
   const totalStudents = users.filter((u) => u.role === "STUDENT").length;
   const totalAdmins = users.filter((u) => u.role === "ADMIN").length;
-  const totalXPSum = totalXP.reduce((sum, s) => sum + (s.xpAwarded || 0), 0);
+  const totalXPSum = totalXP.reduce((sum, s) => sum + (s.amount || 0), 0);
 
   return (
     <div className="min-h-screen bg-background p-4">
