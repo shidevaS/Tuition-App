@@ -97,160 +97,249 @@ export default async function ChallengesPage() {
   const thisWeekKey = Number(`${now.getFullYear()}W${Math.ceil(now.getDate() / 7)}`);
   const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
+  // Fetch internal challenges
   const [daily, weekly, monthly, submissionsData, userProgress] = await Promise.all([
     prisma.challenge.findMany({
-      where: { published: true, cadence: "DAILY", dayKey: todayKey },
-      orderBy: { createdAt: "desc" },
-      take: 10,
+                  where: { published: true, cadence: "DAILY", dayKey: todayKey },
+                  orderBy: { createdAt: "desc" },
+                  take: 10,
     }),
     prisma.challenge.findMany({
-      where: { published: true, cadence: "WEEKLY", weekKey: thisWeekKey },
-      orderBy: { createdAt: "desc" },
-      take: 10,
+                  where: { published: true, cadence: "WEEKLY", weekKey: thisWeekKey },
+                  orderBy: { createdAt: "desc" },
+                  take: 10,
     }),
     prisma.challenge.findMany({
-      where: { published: true, cadence: "MONTHLY", monthKey: thisMonthKey },
-      orderBy: { createdAt: "desc" },
-      take: 10,
+                  where: { published: true, cadence: "MONTHLY", monthKey: thisMonthKey },
+                  orderBy: { createdAt: "desc" },
+                  take: 10,
     }),
     prisma.challengeSubmission.findMany({
-      where: { userId: session.sub },
-      select: { challengeId: true, status: true, xpAwarded: true, feedback: true, autoPassed: true, gradedAt: true },
+                  where: { userId: session.sub },
+                  select: { challengeId: true, status: true, xpAwarded: true, feedback: true, autoPassed: true, gradedAt: true },
     }),
     prisma.xpLog.findMany({
-      where: { userId: session.sub, reason: { startsWith: "Challenge" } },
-      orderBy: { createdAt: "desc" },
-      take: 5,
+                  where: { userId: session.sub, reason: { startsWith: "Challenge" } },
+                  orderBy: { createdAt: "desc" },
+                  take: 5,
     }),
   ]);
 
   const submissions = new Map(submissionsData.map((s) => [s.challengeId, s]));
 
-    const getXp = (challenges: { id: string; xp?: number }[]) => {
-      let sum = 0;
-      for (const c of challenges) {
-        const sub = submissions.get(c.id);
-        if (sub && sub.xpAwarded) {
-          sum += sub.xpAwarded;
-        } else {
-          sum += c.xp || 0;
-        }
-      }
-      return sum;
-    };
+  const getXp = (challenges: { id: string; xp?: number }[]) => {
+    let sum = 0;
+    for (const c of challenges) {
+                  const sub = submissions.get(c.id);
+                  if (sub && sub.xpAwarded) {
+                    sum += sub.xpAwarded;
+                  } else {
+                    sum += c.xp || 0;
+                  }
+    }
+    return sum;
+  };
 
-    const dailyXp = getXp(daily);
-    const weeklyXp = getXp(weekly);
-    const monthlyXp = getXp(monthly);
+  const dailyXp = getXp(daily);
+  const weeklyXp = getXp(weekly);
+  const monthlyXp = getXp(monthly);
 
-    const challengeXpEarned = dailyXp + weeklyXp + monthlyXp;
+  const challengeXpEarned = dailyXp + weeklyXp + monthlyXp;
+
+  // Fetch external hackathon challenges from HackerRank and w3schools
+  const externalChallenges = await fetchExternalChallenges();
 
   return (
     <div className="space-y-10">
-      <header>
-        <h1 className="font-serif text-3xl font-semibold tracking-tight">Daily Challenges</h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          New challenges every day, week, and month. Solve quizzes, write code, craft prompts — earn XP and climb the leaderboard.
-        </p>
-      </header>
+                  <header>
+                    <h1 className="font-serif text-3xl font-semibold tracking-tight">Daily Challenges</h1>
+                    <p className="mt-2 max-w-2xl text-muted-foreground">
+                      New challenges every day, week, and month. Solve quizzes, write code, craft prompts — earn XP and climb the leaderboard.
+                    </p>
+                  </header>
 
-      <ChallengeSection
-        title="Today's Challenges"
-        challenges={daily}
-        cadence="DAILY"
-        submissions={submissions}
-        sessionUser={session}
-      />
+                  <ChallengeSection
+                    title="Today's Challenges"
+                    challenges={daily}
+                    cadence="DAILY"
+                    submissions={submissions}
+                    sessionUser={session}
+                  />
 
-      <ChallengeSection
-        title="This Week's Challenges"
-        challenges={weekly}
-        cadence="WEEKLY"
-        submissions={submissions}
-        sessionUser={session}
-      />
+                  <ChallengeSection
+                    title="This Week's Challenges"
+                    challenges={weekly}
+                    cadence="WEEKLY"
+                    submissions={submissions}
+                    sessionUser={session}
+                  />
 
-      <ChallengeSection
-        title="This Month's Challenge"
-        challenges={monthly}
-        cadence="MONTHLY"
-        submissions={submissions}
-        sessionUser={session}
-      />
+                  <ChallengeSection
+                    title="This Month's Challenge"
+                    challenges={monthly}
+                    cadence="MONTHLY"
+                    submissions={submissions}
+                    sessionUser={session}
+                  />
 
-      {/* Stats */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-serif text-lg">Your Challenge Stats</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-lg bg-muted p-4 text-center">
-              <ProgressRing size="lg" />
-              <p className="mt-2 font-serif text-xl font-semibold">{daily.filter((c) => submissions.has(c.id)).length}</p>
-              <p className="text-sm text-muted-foreground">Daily Done</p>
-            </div>
-            <div className="rounded-lg bg-muted p-4 text-center">
-                          <ProgressRing size="lg" />
-              <p className="mt-2 font-serif text-xl font-semibold">{weekly.filter((c) => submissions.has(c.id)).length}</p>
-              <p className="text-sm text-muted-foreground">Weekly Done</p>
-            </div>
-            <div className="rounded-lg bg-muted p-4 text-center">
-                          <ProgressRing size="lg" />
-              <p className="mt-2 font-serif text-xl font-semibold">{monthly.filter((c) => submissions.has(c.id)).length}</p>
-              <p className="text-sm text-muted-foreground">Monthly Done</p>
-            </div>
-          </div>
-          <div className="mt-4 pt-4 border-t text-sm text-muted-foreground">
-            <p>Total XP from challenges this period: <span className="font-medium">{challengeXpEarned}</span></p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Challenge Activity */}
-      {userProgress.length > 0 && (
-        <Card className="border-[rgb(var(--primary))/0.4] bg-[rgb(var(--primary)/0.05)]">
-          <CardHeader>
-            <CardTitle className="font-serif text-lg">Recent Challenge Activity</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 max-h-80 overflow-y-auto">
-            {userProgress.map((progress) => {
-                                                  const challenge = daily.find((c) => c.id === progress.itemId) ||
-                                                                   weekly.find((c) => c.id === progress.itemId) ||
-                                                                   monthly.find((c) => c.id === progress.itemId);
-              if (!challenge) return null;
-                          const statusBadge = progress.reason === "APPROVED" ? "✓ Approved" : progress.reason === "REJECTED" ? "✗ Rejected" : "⏳ Submitted";
-              return (
-                                        <div key={progress.itemId} className="p-3 rounded-lg border animate-fade-in">
-                  <div className="flex items-start gap-3">
-                    <span className="w-3 h-3 rounded-full flex-shrink-0" aria-hidden="true" />
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{challenge.title}</p>
-                      <p className="text-xs text-muted-foreground">{statusBadge}</p>
-                                  {progress.itemId && <p className="text-xs text-primary">Graduated {new Date(progress.createdAt).toLocaleDateString()}</p>}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                  {/* External Hackathon Challenges */}
+                  {externalChallenges.length > 0 && (
+                    <Card className="border-[rgb(var(--primary))/0.4] bg-[rgb(var(--primary)/0.05)]">
+                      <CardHeader>
+                        <CardTitle className="font-serif text-lg">Live Hackathon Challenges</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <p className="text-sm text-muted-foreground">
+                          Real-time hackathon challenges from top platforms:
+                        </p>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {externalChallenges.map((ext) => (
+                                        <div key={ext.id} className="rounded-lg bg-muted p-4 hover:border-[rgb(var(--primary))/0.4] transition-colors">
+                                          <div className="flex items-start gap-3">
+                                            <Badge tone="gold" className="min-w-8">
+                                  {ext.platform}
+                                            </Badge>
+                                            <div className="flex-1">
+                                  <p className="font-medium truncate">{ext.title}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {ext.cadence} • {ext.difficulty} • +{ext.xp} XP
+                                  </p>
+                                            </div>
+                                          </div>
+                                        </div>
+                          ))}
+                        </div>
                       </CardContent>
                     </Card>
                   )}
 
-      {/* Leaderboard teaser */}
-      <Card className="border-[rgb(var(--primary))/0.4] bg-[rgb(var(--primary)/0.05)]">
-        <CardContent className="pt-5">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <p className="font-semibold">Want to see where you rank?</p>
-              <p className="text-sm text-muted-foreground">Check the leaderboard to compare XP with other learners.</p>
-            </div>
-            <Button asChild>
-              <Link href="/leaderboard">View Leaderboard</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+                  {/* Stats */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="font-serif text-lg">Your Challenge Stats</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid gap-4 sm:grid-cols-3">
+                        <div className="rounded-lg bg-muted p-4 text-center">
+                          <ProgressRing size="lg" />
+                          <p className="mt-2 font-serif text-xl font-semibold">{daily.filter((c) => submissions.has(c.id)).length}</p>
+                          <p className="text-sm text-muted-foreground">Daily Done</p>
+                        </div>
+                        <div className="rounded-lg bg-muted p-4 text-center">
+                          <ProgressRing size="lg" />
+                          <p className="mt-2 font-serif text-xl font-semibold">{weekly.filter((c) => submissions.has(c.id)).length}</p>
+                          <p className="text-sm text-muted-foreground">Weekly Done</p>
+                        </div>
+                        <div className="rounded-lg bg-muted p-4 text-center">
+                          <ProgressRing size="lg" />
+                          <p className="mt-2 font-serif text-xl font-semibold">{monthly.filter((c) => submissions.has(c.id)).length}</p>
+                          <p className="text-sm text-muted-foreground">Monthly Done</p>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-4 border-t text-sm text-muted-foreground">
+                        <p>Total XP from challenges this period: <span className="font-medium">{challengeXpEarned}</span></p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Recent Challenge Activity */}
+                  {userProgress.length > 0 && (
+                    <Card className="border-[rgb(var(--primary))/0.4] bg-[rgb(var(--primary)/0.05)]">
+                      <CardHeader>
+                        <CardTitle className="font-serif text-lg">Recent Challenge Activity</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3 max-h-80 overflow-y-auto">
+                        {userProgress.map((progress) => {
+                          const challenge = daily.find((c) => c.id === progress.itemId) ||
+                                                                   weekly.find((c) => c.id === progress.itemId) ||
+                                                                   monthly.find((c) => c.id === progress.itemId);
+                          if (!challenge) return null;
+                          const statusBadge = progress.reason === "APPROVED" ? "✓ Approved" : progress.reason === "REJECTED" ? "✗ Rejected" : "⏳ Submitted";
+                          return (
+                                        <div key={progress.itemId} className="p-3 rounded-lg border animate-fade-in">
+                                          <div className="flex items-start gap-3">
+                                            <span className="w-3 h-3 rounded-full flex-shrink-0" aria-hidden="true" />
+                                            <div className="flex-1">
+                                  <p className="font-medium text-sm">{challenge.title}</p>
+                                  <p className="text-xs text-muted-foreground">{statusBadge}</p>
+                                  {progress.itemId && <p className="text-xs text-primary">Graduated {new Date(progress.createdAt).toLocaleDateString()}</p>}
+                                            </div>
+                                          </div>
+                                        </div>
+                          );
+                        })}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Leaderboard teaser */}
+                  <Card className="border-[rgb(var(--primary))/0.4] bg-[rgb(var(--primary)/0.05)]">
+                    <CardContent className="pt-5">
+                      <div className="flex items-center justify-between flex-wrap gap-4">
+                        <div>
+                          <p className="font-semibold">Want to see where you rank?</p>
+                          <p className="text-sm text-muted-foreground">Check the leaderboard to compare XP with other learners.</p>
+                        </div>
+                        <Button asChild>
+                          <Link href="/leaderboard">View Leaderboard</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
     </div>
   );
+}
+
+/** Fetch live hackathon challenges from external platforms */
+async function fetchExternalChallenges() {
+  const challenges: Array<{
+    id: string;
+    title: string;
+    platform: string;
+    cadence: string;
+    difficulty: string;
+    xp: number;
+  }> = [];
+
+  try {
+    // Fetch from HackerRank
+    const hrResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/hackerrank-challenges`, {
+                  cache: "no-store",
+    });
+    if (hrResponse.ok) {
+                  const hrData = await hrResponse.json();
+                  challenges.push(...hrData.challenges.map((c: any) => ({
+                    id: `hr-${c.id}`,
+                    title: c.title,
+                    platform: "HackerRank",
+                    cadence: c.cadence || "ONE_TIME",
+                    difficulty: c.difficulty || "INTERMEDIATE",
+                    xp: c.xp || 50,
+                  })));
+    }
+  } catch (e) {
+    console.error("Failed to fetch HackerRank challenges:", e);
+  }
+
+  try {
+    // Fetch from w3schools
+    const wsResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/w3schools-challenges`, {
+                  cache: "no-store",
+    });
+    if (wsResponse.ok) {
+                  const wsData = await wsResponse.json();
+                  challenges.push(...wsData.challenges.map((c: any) => ({
+                    id: `ws-${c.id}`,
+                    title: c.title,
+                    platform: "w3schools",
+                    cadence: c.cadence || "ONE_TIME",
+                    difficulty: c.difficulty || "BEGINNER",
+                    xp: c.xp || 30,
+                  })));
+    }
+  } catch (e) {
+    console.error("Failed to fetch w3schools challenges:", e);
+  }
+
+  return challenges;
 }
