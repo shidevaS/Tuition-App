@@ -3,7 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@tuiton/shared": ["../../packages/shared/src"]
+      "@tuiton/shared": ["../../packages/shared/src"],
+      "@": ["."]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"]

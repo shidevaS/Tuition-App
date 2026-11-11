@@ -217,13 +217,15 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   }
 );
 
-export function SelectTrigger({ className, children, ...props }: { className?: string; children: ReactNode } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+export function SelectTrigger({ className, children, id, ...props }: { className?: string; children: ReactNode; id?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       type="button"
+      id={id}
       role="combobox"
       aria-expanded="false"
       aria-haspopup="listbox"
+      aria-controls={id ? `${id}-content` : undefined}
       className={clsx(
         "flex h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
@@ -242,9 +244,12 @@ export function SelectValue({ className, children, ...props }: { className?: str
   return <span className={clsx("truncate", className)} {...props}>{children}</span>;
 }
 
-export function SelectContent({ className, children, ...props }: { className?: string; children: ReactNode } & React.HTMLAttributes<HTMLDivElement>) {
+export function SelectContent({ className, children, id, ...props }: { className?: string; children: ReactNode; id?: string } & React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
+      id={id}
+      role="listbox"
+      aria-labelledby={id ? `${id}-trigger` : undefined}
       className={clsx(
         "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
@@ -261,6 +266,7 @@ export function SelectItem({ className, value, children, ...props }: { className
   return (
     <div
       role="option"
+      aria-selected="false"
       data-value={value}
       className={clsx(
         "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none",
@@ -297,8 +303,9 @@ export function Avatar({ className, ...props }: { className?: string } & React.H
   return <div className={clsx("relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full", className)} {...props} />;
 }
 
-export function AvatarImage({ className, ...props }: { className?: string } & React.ImgHTMLAttributes<HTMLImageElement>) {
-  return <img className={clsx("aspect-square h-full w-full object-cover", className)} {...props} />;
+export function AvatarImage({ className, alt = "", ...props }: { className?: string; alt?: string } & Omit<React.ImgHTMLAttributes<HTMLImageElement>, "alt">) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className={clsx("aspect-square h-full w-full object-cover", className)} alt={alt} {...props} />;
 }
 
 export function AvatarFallback({ className, ...props }: { className?: string; children: ReactNode } & React.HTMLAttributes<HTMLDivElement>) {

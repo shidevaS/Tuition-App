@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Textarea, Label } from "@/components/ui";
 
@@ -34,14 +34,7 @@ export default function LiveClassClient({ initialClass, sessionUser }: LiveClass
 
   const jitsiUrl = `https://meet.jit.si/${cls.roomName}#config.prejoinPageEnabled=false&config.startWithAudioMuted=true&config.startWithVideoMuted=true&interfaceConfig.APP_NAME="Tuiton Live Class"&interfaceConfig.TOOLBAR_BUTTONS=["microphone","camera","desktop","chat","recording","livestreaming","etherpad","sharedvideo","settings","raisehand","videoquality","filmstrip","invite","feedback","stats","shortcuts","tileview","fullscreen"]`;
 
-  useEffect(() => {
-    fetchChat();
-    checkAttendance();
-    const interval = setInterval(fetchChat, 5000);
-    return () => clearInterval(interval);
-  }, [cls.id]);
-
-  const fetchChat = async () => {
+  const fetchChat = useCallback(async () => {
     try {
       const res = await fetch(`/api/live/${cls.id}/chat`);
       if (res.ok) {
@@ -51,9 +44,9 @@ export default function LiveClassClient({ initialClass, sessionUser }: LiveClass
     } catch (e) {
       console.error(e);
     }
-  };
+  }, [cls.id]);
 
-  const checkAttendance = async () => {
+  const checkAttendance = useCallback(async () => {
     try {
       const res = await fetch(`/api/live/${cls.id}/attend`);
       if (res.ok) {
@@ -63,7 +56,14 @@ export default function LiveClassClient({ initialClass, sessionUser }: LiveClass
     } catch (e) {
       console.error(e);
     }
-  };
+  }, [cls.id]);
+
+  useEffect(() => {
+    fetchChat();
+    checkAttendance();
+    const interval = setInterval(fetchChat, 5000);
+    return () => clearInterval(interval);
+  }, [cls.id, fetchChat, checkAttendance]);
 
   const handleJoin = async () => {
     await fetch(`/api/live/${cls.id}/attend`, { method: "POST" });

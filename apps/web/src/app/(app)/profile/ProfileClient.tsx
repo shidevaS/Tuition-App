@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger, Card, CardContent, CardHeader, CardTitle, Badge, Input, Textarea, Label, Separator } from "@/components/ui";
 import { LogOut, Award, Code, FileText, Star, BookOpen, Flame, TrendingUp, ExternalLink, Plus, Save, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -242,7 +243,9 @@ export default function ProfileClient({
                   {projects.map((project) => (
                     <div key={project.id} className="border border-border rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
                       {project.imageUrl && (
-                        <img src={project.imageUrl} alt={project.title} className="w-full h-40 object-cover" loading="lazy" />
+                        <div className="relative w-full h-40 overflow-hidden">
+                          <Image src={project.imageUrl} alt={project.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+                        </div>
                       )}
                       <div className="p-4 space-y-3">
                         <h3 className="font-semibold text-lg">{project.title}</h3>

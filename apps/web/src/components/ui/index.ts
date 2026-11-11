@@ -1,2 +1,2 @@
-export * from "../ui123.tsx";
-export * from "./progress-ring.tsx";
+export * from "../ui";
+export * from "./progress-ring";
