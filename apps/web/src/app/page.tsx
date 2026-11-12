@@ -1,3 +1,5 @@
+﻿"use client";
+
 import Link from "next/link";
 import { APP_NAME, PILLARS } from "@tuiton/shared";
 import { Logo } from "@/components/logo";
@@ -8,7 +10,12 @@ const FEATURES = [
   { title: "Two pillars", body: "School subjects and an Innovation Lab — coding, prompt engineering, AI tools, app-building, cyber basics — under one roof, one profile, one streak." },
   { title: "Challenges build the habit", body: "A compact daily task keeps the streak alive. Weekly challenges earn badges; monthly capstones earn a feature and a certificate." },
   { title: "A profile that earns its keep", body: "A shareable portfolio of projects and prompts, a skill tree, and progress dashboards — not a vanity page." },
-];
+] as const;
+
+const HERO_CALLS_TO_ACTION = [
+  { label: "Sign up free", href: "/register", variant: "primary" },
+  { label: "Log in", href: "/login", variant: "ghost" },
+] as const;
 
 export default function LandingPage() {
   return (
@@ -36,15 +43,14 @@ export default function LandingPage() {
             <span className="text-[rgb(var(--primary))]">AI&nbsp;studio</span>.
           </h1>
           <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
-            A learning platform that blends school-subject tuition with an AI &amp; innovation track — wood-friendly live classes plus a pre-integrated content library, and growth through daily, weekly and monthly challenges.
+            A learning platform that blends school-subject tuition with an AI & innovation track — live classes plus a pre-integrated content library, and growth through daily, weekly and monthly challenges.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Button size="lg" asChild>
-              <Link href="/register">Sign up free</Link>
-            </Button>
-            <Button size="lg" variant="ghost" className="text-muted-foreground" asChild>
-              <Link href="/dashboard">Take me to the app</Link>
-            </Button>
+            {HERO_CALLS_TO_ACTION.map((cta) => (
+              <Button key={cta.label} size="lg" variant={cta.variant} asChild>
+                <Link href={cta.href}>{cta.label}</Link>
+              </Button>
+            ))}
           </div>
         </section>
 
@@ -80,11 +86,35 @@ export default function LandingPage() {
             ))}
           </div>
         </section>
+
+        {/* AI Chatbot Section */}
+        <section className="mx-auto max-w-6xl px-5 py-14 border-t border-border">
+          <h2 className="mb-6 font-serif text-3xl font-semibold">AI Tutoring Assistant</h2>
+          <p className="mb-4 text-lg text-muted-foreground">
+            Get instant help with subjects, coding, prompt engineering, and more. Ask a question below or browse recent topics.
+          </p>
+          <div className="border rounded-lg bg-[rgb(var(--card))] p-4 min-h-[300px] flex flex-col">
+            <div className="flex-1 overflow-y-auto p-3 text-sm text-muted-foreground" id="chat-history">
+              <p className="text-muted-foreground small">Start a conversation to see AI responses here...</p>
+            </div>
+            <div className="p-3 border-t border-border">
+              <textarea
+                className="w-full p-2 rounded border outline-none resize-none"
+                placeholder="Ask AI about math, coding, or anything..."
+                rows={3}
+                id="chat-input"
+              ></textarea>
+              <Button size="sm" className="mt-2 w-full">
+                Send
+              </Button>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-5 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <span>© 2026 {APP_NAME}. Hosted by Shivani &amp; Devendra.</span>
+          <span>© 2026 {APP_NAME}. Hosted by Shivani & Devendra.</span>
           <span className="text-xs">Free-first · Live classes · Innovation Lab</span>
         </div>
       </footer>
