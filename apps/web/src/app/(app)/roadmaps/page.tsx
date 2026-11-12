@@ -63,9 +63,14 @@ function PillarSection({ pillar, roadmaps, enrollments }: { pillar: (typeof PILL
   );
 }
 
+import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Learning Roadmaps" };
+
 export default async function RoadmapsPage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) return redirect("/login");
 
   const [roadmaps, enrollmentsData] = await Promise.all([
     prisma.roadmap.findMany({

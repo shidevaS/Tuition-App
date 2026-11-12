@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@tuiton/db";
 import { getSession } from "@/lib/session";
@@ -78,10 +79,10 @@ function ModuleCard({ mod, enrollment, userId }: { mod: any; enrollment: boolean
 }
 
 export default async function RoadmapDetailPage({ params }: Props) {
-  const { slug } = await params;
   const session = await getSession();
-  if (!session) return null;
+  if (!session) return redirect("/login");
 
+  const { slug } = await params;
   const roadmap = await prisma.roadmap.findUnique({
     where: { slug },
     include: {

@@ -6,11 +6,14 @@ import { PILLARS } from "@tuiton/shared";
 import { getSession } from "@/lib/session";
 import { Button, Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 
+import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
 export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) return redirect("/login");
 
   // Differentiate based on role
   if (session.role === "ADMIN") {

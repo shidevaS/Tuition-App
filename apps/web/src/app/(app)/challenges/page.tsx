@@ -88,9 +88,14 @@ function ChallengeSection({
   );
 }
 
+import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Daily Challenges" };
+
 export default async function ChallengesPage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) return redirect("/login");
 
   const now = new Date();
   const todayKey = Number(now.toISOString().slice(0, 10).replace(/-/g, ""));

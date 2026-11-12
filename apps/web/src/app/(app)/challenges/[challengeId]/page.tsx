@@ -8,7 +8,7 @@ interface Props { params: Promise<{ challengeId: string }> }
 export default async function ChallengePage({ params }: Props) {
   const { challengeId } = await params;
   const session = await getSession();
-  if (!session) return null;
+  if (!session) return redirect("/login");
 
   const challenge = await prisma.challenge.findUnique({
     where: { id: challengeId },

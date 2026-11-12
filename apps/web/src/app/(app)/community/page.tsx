@@ -3,11 +3,14 @@ import { prisma } from "@tuiton/db";
 import { getSession } from "@/lib/session";
 import CommunityClient from "./CommunityClient";
 
+import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
 export const metadata: Metadata = { title: "Community Forum" };
 
 export default async function CommunityPage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) return redirect("/login");
 
   const [topicsRaw, user] = await Promise.all([
     prisma.forumTopic.findMany({

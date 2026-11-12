@@ -23,7 +23,8 @@ A learning platform that blends school-subject tuition with an AI & innovation t
 
 ### 🛠️ Local Development
 
-The development server is running locally at `http://localhost:3000` with the following features verified:
+The development server is running locally at `http://loca
+run locally in the browser lhost:3000` with the following features verified:
 - Next.js App Router compilation
 - API endpoints (auth, lessons, live classes, challenges)
 - Database seeding and Prisma ORM operations

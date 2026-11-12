@@ -3,11 +3,14 @@ import { prisma } from "@tuiton/db";
 import { getSession } from "@/lib/session";
 import ProfileClient from "./ProfileClient";
 
+import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
 export const metadata: Metadata = { title: "Profile & Portfolio" };
 
 export default async function ProfilePage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) return redirect("/login");
 
   const [user, profile, projectsRaw, certificatesRaw, badges, enrollmentsRaw, xpLogsRaw] = await Promise.all([
     prisma.user.findUnique({ where: { id: session.sub } }),

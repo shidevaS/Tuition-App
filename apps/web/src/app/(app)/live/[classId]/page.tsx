@@ -18,7 +18,7 @@ async function getClassData(classId: string) {
 export default async function LiveClassPage({ params }: Props) {
   const { classId } = await params;
   const session = await getSession();
-  if (!session) return null;
+  if (!session) return redirect("/login");
 
   const cls = await getClassData(classId);
   if (!cls) notFound();

@@ -5,11 +5,14 @@ import { getSession } from "@/lib/session";
 import { Button } from "@/components/ui";
 import CourseCatalogClient from "./CourseCatalogClient";
 
+import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
 export const metadata: Metadata = { title: "Course Library" };
 
 export default async function CoursesPage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) return redirect("/login");
   const [courses, enrollments] = await Promise.all([
     prisma.course.findMany({
       where: { isPublished: true },

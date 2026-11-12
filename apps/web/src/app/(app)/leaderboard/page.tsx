@@ -3,11 +3,14 @@ import { prisma } from "@tuiton/db";
 import { getSession } from "@/lib/session";
 import { Badge, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 
+import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
 export const metadata: Metadata = { title: "Leaderboard" };
 
 export default async function LeaderboardPage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) return redirect("/login");
 
   const [myProfile, topUsers, myRank] = await Promise.all([
     prisma.studentProfile.findUnique({ where: { userId: session.sub } }),

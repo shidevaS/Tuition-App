@@ -4,11 +4,14 @@ import { prisma } from "@tuiton/db";
 import { getSession } from "@/lib/session";
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 
+import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
 export const metadata: Metadata = { title: "Live Classes" };
 
 export default async function LiveClassesPage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) return redirect("/login");
 
   const now = new Date();
   const isAdmin = session.role === "ADMIN";
