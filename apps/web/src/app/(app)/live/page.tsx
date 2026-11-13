@@ -1,13 +1,11 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@tuiton/db";
 import { getSession } from "@/lib/session";
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 
 import { redirect } from "next/navigation";
-import { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Live Classes" };
+export const metadata = { title: "Live Classes" };
 
 export default async function LiveClassesPage() {
   const session = await getSession();

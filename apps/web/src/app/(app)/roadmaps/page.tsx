@@ -1,11 +1,10 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@tuiton/db";
 import { getSession } from "@/lib/session";
 import { PILLARS } from "@tuiton/shared";
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Learning Roadmaps" };
+export const metadata = { title: "Learning Roadmaps" };
 
 function PillarSection({ pillar, roadmaps, enrollments }: { pillar: (typeof PILLARS)[number]; roadmaps: any[]; enrollments: Map<string, number> }) {
   const pillarRoadmaps = roadmaps.filter((r) => r.pillar === pillar.id);
@@ -64,9 +63,6 @@ function PillarSection({ pillar, roadmaps, enrollments }: { pillar: (typeof PILL
 }
 
 import { redirect } from "next/navigation";
-import { Metadata } from "next";
-
-export const metadata: Metadata = { title: "Learning Roadmaps" };
 
 export default async function RoadmapsPage() {
   const session = await getSession();

@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@tuiton/db";
 import { getSession } from "@/lib/session";
@@ -6,9 +5,8 @@ import { Button } from "@/components/ui";
 import CourseCatalogClient from "./CourseCatalogClient";
 
 import { redirect } from "next/navigation";
-import { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Course Library" };
+export const metadata = { title: "Course Library" };
 
 export default async function CoursesPage() {
   const session = await getSession();

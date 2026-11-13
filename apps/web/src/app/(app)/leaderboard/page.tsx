@@ -1,12 +1,10 @@
-import type { Metadata } from "next";
 import { prisma } from "@tuiton/db";
 import { getSession } from "@/lib/session";
 import { Badge, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 
 import { redirect } from "next/navigation";
-import { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Leaderboard" };
+export const metadata = { title: "Leaderboard" };
 
 export default async function LeaderboardPage() {
   const session = await getSession();

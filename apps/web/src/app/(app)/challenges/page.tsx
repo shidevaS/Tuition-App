@@ -1,11 +1,10 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@tuiton/db";
 import { getSession } from "@/lib/session";
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 import { ProgressRing } from "@/components/ui/progress-ring";
 
-export const metadata: Metadata = { title: "Daily Challenges" };
+export const metadata = { title: "Daily Challenges" };
 
 function ChallengeSection({
   title,
@@ -89,9 +88,6 @@ function ChallengeSection({
 }
 
 import { redirect } from "next/navigation";
-import { Metadata } from "next";
-
-export const metadata: Metadata = { title: "Daily Challenges" };
 
 export default async function ChallengesPage() {
   const session = await getSession();

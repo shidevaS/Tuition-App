@@ -1,12 +1,10 @@
-import { Metadata } from "next";
 import { prisma } from "@tuiton/db";
 import { getSession } from "@/lib/session";
 import ProfileClient from "./ProfileClient";
 
 import { redirect } from "next/navigation";
-import { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Profile & Portfolio" };
+export const metadata = { title: "Profile & Portfolio" };
 
 export default async function ProfilePage() {
   const session = await getSession();
