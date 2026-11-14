@@ -30,24 +30,41 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-6 max-w-md w-full">
       {error && (
         <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </div>
       )}
-      <div className="space-y-1.5">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" placeholder="you@example.com" autoComplete="email" required />
+      <div className="space-y-3">
+        <Label htmlFor="email">Username (email address)</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="you@example.com"
+          autoComplete="email"
+          required
+          className="border rounded-md px-3 py-2 w-full focus:border-primary focus:ring-2 focus:ring-primary/20"
+        />
+        <p className="text-xs text-muted-foreground">Your username is the email address you used to register</p>
       </div>
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password">Password</Label>
-          <span className="text-xs text-muted-foreground">Seeded demo: <code>tuiton123</code></span>
-        </div>
-        <Input id="password" name="password" type="password" placeholder="••••••••" autoComplete="current-password" required />
+      <div className="space-y-3">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          placeholder="••••••••"
+          autoComplete="current-password"
+          required
+          className="border rounded-md px-3 py-2 w-full focus:border-primary focus:ring-2 focus:ring-primary/20"
+        />
+        <p className="text-xs text-muted-foreground">
+          Seeded demo: <code className="font-mono text-sm">tuiton123</code>
+        </p>
       </div>
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button type="submit" className="w-full">
         {isPending ? "Signing in…" : "Sign in"}
       </Button>
       <p className="text-center text-sm text-muted-foreground">
