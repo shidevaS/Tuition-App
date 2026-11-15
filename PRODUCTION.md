@@ -2,7 +2,11 @@
 
 ## Overview
 
-This document describes how to deploy Tuiton to production. The app is ready for end-to-end production deployment with the following requirements:
+## Deployment blocker
+
+The Prisma datasource in `packages/db/prisma/schema.prisma` currently uses SQLite. The production template and Docker Compose file describe PostgreSQL, which is not compatible with that generated client. Vercel also cannot safely persist a local SQLite database. Do not deploy until the Prisma schema has been migrated to PostgreSQL (or another supported persistent provider), a production database has been provisioned, and the migration has been tested. This repository is not linked to a Vercel project.
+
+The remaining sections describe the intended setup only; they are not a claim that the current app is production-ready.
 
 ### Prerequisites
 - Node.js 20.x or higher
@@ -89,13 +93,9 @@ npm run start
 
 ## Production Checklist
 
-- [x] SQLite replaced with PostgreSQL
-- [x] HFS256 JWT signing implemented
-- [x] Environment variables secured
-- [x] PWA icons configured
-- [x] Docker deployment ready
-- [x] TypeScript type checking passes
-- [x] Seed script for production data
+- [ ] Migrate the Prisma datasource from SQLite to PostgreSQL and validate the migration
+- [ ] Provision a persistent production database
+- [ ] Configure production-only secrets in the hosting provider
 - [ ] SSL/HTTPS configured (via CDN or reverse proxy)
 - [ ] Rate limiting enabled
 - [ ] Backup strategy for database
@@ -105,10 +105,9 @@ npm run start
 
 **Web App**: http://localhost:3000
 
-### Default Users (seed script)
-- Admin 1: `shivani@tuiton.app` / `tuiton123`
-- Admin 2: `devendra@tuiton.app` / `tuiton123`
-- Demo Student: `student@tuiton.app` / `tuiton123`
+### Seed credentials
+
+Demo passwords are local-development-only. Production seeding requires `TUITON_ADMIN_PASSWORD` and `TUITON_STUDENT_PASSWORD` (at least 12 characters each); configure them as private environment variables and never commit them.
 
 ## Production Deployment Options
 

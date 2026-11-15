@@ -23,23 +23,7 @@
     }
   ],
   "categories": ["education", "productivity", "utilities"],
-  "screenshots": [
-  {
-    "src": "/screenshots/hero.png",
-    "sizes": "1280x720",
-    "type": "image/png"
-  },
-  {
-    "src": "/screenshots/dashboard.png",
-    "sizes": "1280x720",
-    "type": "image/png"
-  },
-  {
-    "src": "/screenshots/profile.png",
-    "sizes": "1280x720",
-    "type": "image/png"
-  }
-],
+  "screenshots": [],
   "shortcuts": [
     {
       "name": "Dashboard",

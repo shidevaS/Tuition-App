@@ -2,38 +2,9 @@
 
 A learning platform that blends school-subject tuition with an AI & innovation track — live classes plus integrated content, daily challenges, and a portfolio that proves what you can build.
 
-## 🚀 Production Status
+## Readiness
 
-**This app is partially production-ready and needs the following fixes:**
-
-### ✅ Already Configured
-- [x] Next.js App Router with TypeScript
-- [x] Prisma ORM with SQLite (dev) / PostgreSQL (prod)
-- [x] JWT-based authentication
-- [x] Role-based access control (Student / Admin)
-- [x] PWA support (manifest, service worker)
-- [x] Fresh deployment ready
-
-### 🟡 In Progress
-- [ ] Local development server running - verified at http://localhost:3000
-- [ ] Production database (PostgreSQL) - currently using SQLite
-- [ ] Environment variables for production
-- [ ] Missing PWA icons (only `icon.svg` exists)
-- [ ] Production-ready Docker setup
-
-### 🛠️ Local Development
-
-The development server is running locally at `http://loca
-run locally in the browser lhost:3000` with the following features verified:
-- Next.js App Router compilation
-- API endpoints (auth, lessons, live classes, challenges)
-- Database seeding and Prisma ORM operations
-- JWT authentication flow
-- Role-based access control
-- PWA manifest and service worker
-- Live class Jitsi integration
-- Challenge submission flow
-- Notification system
+The local web app uses SQLite and seeded demo accounts. Production deployment is **not ready**: the Prisma schema still uses SQLite, while Vercel requires a persistent external database. Do not deploy the current production environment template until the schema and database migration are completed.
 
 ## 📦 Project Structure
 
@@ -69,13 +40,18 @@ cp packages/db/.env.example packages/db/.env
 # Update DATABASE_URL for SQLite (dev) or PostgreSQL (prod)
 # For SQLite: DATABASE_URL="file:./dev.db"
 
+# Generate the Prisma client and prepare the local SQLite database
+npm run db:generate
+npm run db:push
+
 # Seed the database
-npm run db:push 
 npm run db:seed
 
 # Start development server
 npm run dev
 ```
+
+Open `http://localhost:3000`. Local seed credentials are `shivani@tuiton.app` / `tuiton123` (admin) and `student@tuiton.app` / `tuiton123` (student). These demo passwords must never be used in a deployed environment.
 
 ### Database Seeding
 
@@ -98,6 +74,8 @@ DATABASE_URL="postgresql://user:password@localhost:5432/tuiton?schema=public"
 
 # Authentication
 AUTH_SECRET="<32-char-secret-from-crypto.randomBytes(32).toString('hex')>"
+TUITON_ADMIN_PASSWORD="<unique password, at least 12 characters>"
+TUITON_STUDENT_PASSWORD="<unique password, at least 12 characters>"
 
 # App URL
 NEXT_PUBLIC_APP_URL="https://your-domain.com"

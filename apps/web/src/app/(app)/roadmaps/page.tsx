@@ -1,12 +1,28 @@
 import Link from "next/link";
 import { prisma } from "@tuiton/db";
+import type { Prisma } from "@prisma/client";
 import { getSession } from "@/lib/session";
 import { PILLARS } from "@tuiton/shared";
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "Learning Roadmaps" };
 
-function PillarSection({ pillar, roadmaps, enrollments }: { pillar: (typeof PILLARS)[number]; roadmaps: any[]; enrollments: Map<string, number> }) {
+const roadmapCardSelect = {
+  id: true,
+  slug: true,
+  pillar: true,
+  title: true,
+  tagline: true,
+  grade: true,
+  color: true,
+  xpTotal: true,
+  modules: { select: { lessons: { select: { id: true } } } },
+} satisfies Prisma.RoadmapSelect;
+
+type RoadmapWithLessons = Prisma.RoadmapGetPayload<{ select: typeof roadmapCardSelect }>;
+
+function PillarSection({ pillar, roadmaps, enrollments }: { pillar: (typeof PILLARS)[number]; roadmaps: RoadmapWithLessons[]; enrollments: Map<string, number> }) {
   const pillarRoadmaps = roadmaps.filter((r) => r.pillar === pillar.id);
   if (pillarRoadmaps.length === 0) return null;
 
@@ -30,11 +46,11 @@ function PillarSection({ pillar, roadmaps, enrollments }: { pillar: (typeof PILL
               </div>
               <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                 <Badge tone="neutral">{rm.grade || "All"}</Badge>
-                <span>{rm.modules?.length || 0} modules</span>
+                <span>{rm.modules.length} modules</span>
                 <span>•</span>
-                <span>{rm.lessons?.length || 0} lessons</span>
+                <span>{rm.modules.reduce((count, module) => count + module.lessons.length, 0)} lessons</span>
                 <span>•</span>
-                <span>~{rm.xpTotal || 0} XP</span>
+                <span>~{rm.xpTotal} XP</span>
               </div>
             </CardHeader>
             <CardContent className="pt-0">
@@ -62,8 +78,6 @@ function PillarSection({ pillar, roadmaps, enrollments }: { pillar: (typeof PILL
   );
 }
 
-import { redirect } from "next/navigation";
-
 export default async function RoadmapsPage() {
   const session = await getSession();
   if (!session) return redirect("/login");
@@ -72,7 +86,7 @@ export default async function RoadmapsPage() {
     prisma.roadmap.findMany({
       where: { published: true },
       orderBy: [{ pillar: "asc" }, { order: "asc" }],
-      include: { modules: { include: { lessons: true } } },
+      select: roadmapCardSelect,
     }),
     prisma.roadmapEnrollment.findMany({
       where: { userId: session.sub },
@@ -91,40 +105,52 @@ export default async function RoadmapsPage() {
         </p>
       </header>
 
-      {PILLARS.map((pillar) => (
-        <PillarSection key={pillar.id} pillar={pillar} roadmaps={roadmaps} enrollments={enrollments} />
-      ))}
+      {roadmaps.length === 0 ? (
+        <p className="rounded-xl border border-border bg-card px-5 py-6 text-muted-foreground">
+          No learning paths are published yet. Please check back soon.
+        </p>
+      ) : (
+        PILLARS.map((pillar) => (
+          <PillarSection key={pillar.id} pillar={pillar} roadmaps={roadmaps} enrollments={enrollments} />
+        ))
+      )}
 
       <section>
         <h2 className="mb-4 font-serif text-xl font-semibold">Your Enrollments</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from(enrollments.entries()).map(([roadmapId, progress]) => {
-            const rm = roadmaps.find((r) => r.id === roadmapId);
-            if (!rm) return null;
-            return (
-              <Card key={roadmapId} className="group hover:border-[rgb(var(--primary)/0.4)] transition-colors">
-                <CardHeader>
-                  <CardTitle className="font-serif text-lg">{rm.title}</CardTitle>
-                  <CardDescription>{rm.tagline}</CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0 space-y-3">
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[rgb(var(--primary))] transition-all duration-500"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{progress}% complete</span>
-                    <Button size="sm" asChild>
-                      <Link href={`/roadmaps/${rm.slug}`}>Continue</Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        {enrollments.size === 0 ? (
+          <p className="rounded-xl border border-border px-5 py-6 text-sm text-muted-foreground">
+            You have not enrolled in a roadmap yet. Choose a learning path above to get started.
+          </p>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from(enrollments.entries()).map(([roadmapId, progress]) => {
+              const rm = roadmaps.find((r) => r.id === roadmapId);
+              if (!rm) return null;
+              return (
+                <Card key={roadmapId} className="group transition-colors hover:border-[rgb(var(--primary)/0.4)]">
+                  <CardHeader>
+                    <CardTitle className="font-serif text-lg">{rm.title}</CardTitle>
+                    <CardDescription>{rm.tagline}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-0">
+                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full bg-[rgb(var(--primary))] transition-all duration-500"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{progress}% complete</span>
+                      <Button size="sm" asChild>
+                        <Link href={`/roadmaps/${rm.slug}`}>Continue</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </section>
     </div>
   );

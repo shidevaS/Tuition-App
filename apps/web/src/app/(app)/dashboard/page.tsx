@@ -2,8 +2,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@tuiton/db";
-import { PILLARS } from "@tuiton/shared";
-import { getSession } from "@/lib/session";
+import { getSession, isAdmin } from "@/lib/session";
 import { Button, Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 
 import { redirect } from "next/navigation";
@@ -15,7 +14,7 @@ export default async function DashboardPage() {
   if (!session) return redirect("/login");
 
   // Differentiate based on role
-  if (session.role === "ADMIN") {
+  if (isAdmin(session)) {
     return <AdminDashboard />;
   }
 
@@ -24,7 +23,12 @@ export default async function DashboardPage() {
   const [enrollments, progress, challenges, submissions] = await Promise.all([
     prisma.courseEnrollment.findMany({ where: { userId }, select: { courseId: true } }),
     prisma.lessonProgress.findMany({ where: { userId }, select: { lessonId: true, completed: true } }),
-    prisma.challenge.findMany({ where: { published: true }, take: 5, orderBy: { createdAt: "desc" } }),
+    prisma.challenge.findMany({
+      where: { published: true },
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      select: { id: true, kind: true, title: true, cadence: true, difficulty: true },
+    }),
     prisma.challengeSubmission.findMany({ where: { userId }, select: { challengeId: true, status: true, xpAwarded: true } }),
   ]);
 
@@ -34,63 +38,57 @@ export default async function DashboardPage() {
   const totalChallenges = await prisma.challenge.count({ where: { published: true } });
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <header className="mb-8">
+    <div className="space-y-8">
+      <header>
         <h1 className="font-serif text-3xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Welcome to your dashboard</p>
+        <p className="mt-2 text-muted-foreground">Welcome to your dashboard</p>
       </header>
 
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Progress Card */}
-        <Card className="border-0 bg-[rgb(var(--card))]">
-          <CardHeader className="p-0">
+      <section aria-label="Learning overview" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card className="min-w-0">
+          <CardHeader>
             <CardTitle className="font-serif text-lg">Learning Progress</CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent>
             <div className="space-y-4">
               <div>
                 <p className="text-3xl font-semibold">{completedLessons}</p>
                 <p className="text-sm text-muted-foreground">lessons completed</p>
               </div>
               <div className="w-full bg-muted/50 rounded-full h-2">
-                <div className="h-2 rounded-full bg-primary" style={{ width: totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0 }}></div>
+                <div className="h-2 rounded-full bg-primary" style={{ width: totalLessons > 0 ? `${Math.min(100, (completedLessons / totalLessons) * 100)}%` : "0%" }}></div>
               </div>
               <p className="text-xs text-muted-foreground">{totalLessons} total lessons</p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Challenges Card */}
-        <Card className="border-0 bg-[rgb(var(--card))]">
-          <CardHeader className="p-0">
+        <Card className="min-w-0 sm:col-span-2 xl:col-span-1">
+          <CardHeader>
             <CardTitle className="font-serif text-lg">Recent Challenges</CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-3">
+          <CardContent>
+            <div className="space-y-4 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:space-y-0 xl:block xl:space-y-4">
               {challenges.map((ch) => (
-                <div key={ch.id} className="flex items-center gap-3 text-sm">
-                  <Badge tone="neutral" className="min-w-8">
-                    {ch.kind}
-                  </Badge>
-                  <div className="flex-1">
-                    <p className="font-medium truncate">{ch.title}</p>
-                    <p className="text-xs text-muted-foreground">{ch.cadence} {ch.difficulty}</p>
+                <div key={ch.id} className="min-w-0 border-b border-border/70 pb-3 last:border-0 last:pb-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge tone="neutral" className="shrink-0">{ch.kind.replace(/_/g, " ")}</Badge>
+                    <span className="shrink-0 text-xs text-muted-foreground">{ch.difficulty.toLowerCase()}</span>
                   </div>
-                  <Badge tone={ch.difficulty === "BEGINNER" ? "neutral" : ch.difficulty === "INTERMEDIATE" ? "teal" : "gold"} className="min-w-8">
-                    {ch.difficulty}
-                  </Badge>
+                  <p className="mt-2 truncate text-sm font-medium" title={ch.title}>{ch.title}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{ch.cadence.toLowerCase()} challenge</p>
                 </div>
               ))}
+              {challenges.length === 0 && <p className="text-sm text-muted-foreground">New challenges will appear here.</p>}
             </div>
           </CardContent>
         </Card>
 
-        {/* XP Card */}
-        <Card className="border-0 bg-[rgb(var(--card))]">
-          <CardHeader className="p-0">
+        <Card className="min-w-0">
+          <CardHeader>
             <CardTitle className="font-serif text-lg">XP & Badges</CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent>
             <div className="space-y-3">
               <div>
                 <p className="text-3xl font-semibold">+{submissions.reduce((sum, s) => sum + (s.xpAwarded || 0), 0)}</p>
@@ -104,17 +102,16 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Enrolled Courses Card */}
-        <Card className="border-0 bg-[rgb(var(--card))]">
-          <CardHeader className="p-0">
+        <Card className="min-w-0">
+          <CardHeader>
             <CardTitle className="font-serif text-lg">Enrolled Courses</CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent>
             <p className="text-sm text-muted-foreground">
               {enrollments.length} courses enrolled
             </p>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/roadmaps">View all courses</Link>
+              <Link href="/courses">Browse courses</Link>
             </Button>
           </CardContent>
         </Card>
@@ -137,13 +134,13 @@ async function AdminDashboard() {
   const totalXPSum = totalXP.reduce((sum, s) => sum + (s.amount || 0), 0);
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <header className="mb-8">
+    <div className="space-y-8">
+      <header>
         <h1 className="font-serif text-3xl font-semibold tracking-tight">Admin Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Platform overview and management</p>
+        <p className="mt-2 text-muted-foreground">Platform overview and management</p>
       </header>
 
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <section aria-label="Platform overview" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {/* Students Card */}
         <Card className="border-0 bg-[rgb(var(--card))]">
           <CardHeader className="p-0">
@@ -156,7 +153,7 @@ async function AdminDashboard() {
                 <p className="text-sm text-muted-foreground">active students</p>
               </div>
               <div className="w-full bg-muted/50 rounded-full h-2">
-                <div className="h-2 rounded-full bg-primary" style={{ width: totalStudents > 0 ? (totalStudents / (totalStudents + totalAdmins)) * 100 : 0 }}></div>
+                <div className="h-2 rounded-full bg-primary" style={{ width: totalStudents + totalAdmins > 0 ? `${(totalStudents / (totalStudents + totalAdmins)) * 100}%` : "0%" }}></div>
               </div>
               <p className="text-xs text-muted-foreground">of {totalStudents + totalAdmins} total users</p>
             </div>

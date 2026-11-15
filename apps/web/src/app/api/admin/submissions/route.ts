@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@tuiton/db";
-import { getSession } from "@/lib/session";
+import { getSession, isAdmin } from "@/lib/session";
 
 export async function GET() {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session || !isAdmin(session)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const submissions = await prisma.challengeSubmission.findMany({
     orderBy: { createdAt: "desc" },

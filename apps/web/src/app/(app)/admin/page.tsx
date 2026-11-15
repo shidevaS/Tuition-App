@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { prisma } from "@tuiton/db";
-import { getSession } from "@/lib/session";
+import { getSession, isAdmin } from "@/lib/session";
 import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
+import { AdminNotificationSender } from "./AdminNotificationSender";
 
 export const metadata: Metadata = { title: "Admin console" };
 
 export default async function AdminPage() {
   const session = await getSession();
-  // Belt-and-braces role guard (middleware also enforces this).
-  if (!session || session.role !== "ADMIN") redirect("/dashboard");
+  // Belt-and-braces admin guard (middleware also enforces this).
+  if (!session || !isAdmin(session)) redirect("/dashboard");
 
   const [users, submissions, challenges] = await Promise.all([
     prisma.user.findMany({ orderBy: { createdAt: "desc" }, include: { profile: true } }),
@@ -101,6 +102,10 @@ export default async function AdminPage() {
             </div>
           </CardContent>
         </Card>
+      </section>
+
+      <section className="lg:col-span-3">
+        <AdminNotificationSender />
       </section>
     </div>
   );

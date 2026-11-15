@@ -18,6 +18,8 @@ next-env.d.ts
 apps/*/.env
 apps/*/.env.local
 packages/*/.env
+**/.env.production
+**/cookies.txt
 
 # logs
 *.log
@@ -47,5 +49,13 @@ Thumbs.db
 coverage/
 .turbo/
 .cache/
+
+# build artifacts & logs
+build-output.txt
+typecheck-output.txt
+dev-server.log
+
+# metro / react-native generated
+apps/mobile/lib/
 
 .vercel

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@tuiton/db";
-import { getSession } from "@/lib/session";
+import { getSession, isAdmin } from "@/lib/session";
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 
 import { redirect } from "next/navigation";
@@ -12,7 +12,7 @@ export default async function LiveClassesPage() {
   if (!session) return redirect("/login");
 
   const now = new Date();
-  const isAdmin = session.role === "ADMIN";
+  const userIsAdmin = Boolean(session && isAdmin(session));
 
   const [upcoming, past, enrollments] = await Promise.all([
     prisma.liveClass.findMany({
@@ -37,7 +37,7 @@ export default async function LiveClassesPage() {
       },
       take: 10,
     }),
-    isAdmin ? [] : prisma.classAttendance.findMany({
+    userIsAdmin ? [] : prisma.classAttendance.findMany({
       where: { userId: session.sub },
       select: { classId: true },
     }),
@@ -54,7 +54,7 @@ export default async function LiveClassesPage() {
             Join scheduled sessions, participate in real-time chat, and watch recordings.
           </p>
         </div>
-        {isAdmin && (
+        {userIsAdmin && (
           <Button asChild>
             <Link href="/admin/classes/new">Schedule Class</Link>
           </Button>
@@ -80,7 +80,7 @@ export default async function LiveClassesPage() {
                 key={cls.id}
                 cls={cls}
                 isEnrolled={enrolledIds.has(cls.id)}
-                isAdmin={isAdmin}
+                isAdmin={userIsAdmin}
                 sessionUser={session}
               />
             ))}
@@ -107,7 +107,7 @@ export default async function LiveClassesPage() {
                 key={cls.id}
                 cls={cls}
                 isEnrolled={enrolledIds.has(cls.id)}
-                isAdmin={isAdmin}
+                isAdmin={userIsAdmin}
                 sessionUser={session}
                 isPast={true}
               />

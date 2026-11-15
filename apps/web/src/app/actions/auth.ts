@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { prisma, hashPassword, verifyPassword } from "@tuiton/db";
-import { createSession, destroySession } from "@/lib/session";
+import { createSession, destroySession, isAdmin } from "@/lib/session";
 
 const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email address."),
@@ -32,7 +32,7 @@ export async function login(input: unknown): Promise<ActionResult> {
 
   await createSession({ sub: user.id, email: user.email, name: user.name, role: user.role as "STUDENT" | "ADMIN" });
 
-  return { redirectTo: user.role === "ADMIN" ? "/admin" : "/dashboard" };
+  return { redirectTo: isAdmin({ sub: user.id, email: user.email, name: user.name, role: user.role as "STUDENT" | "ADMIN" }) ? "/admin" : "/dashboard" };
 }
 
 export async function register(input: unknown): Promise<ActionResult> {

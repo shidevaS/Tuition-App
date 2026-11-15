@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@tuiton/db";
-import { getSession } from "@/lib/session";
+import { getSession, isAdmin } from "@/lib/session";
 
 export async function GET() {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session || !isAdmin(session)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const challenges = await prisma.challenge.findMany({
     orderBy: { createdAt: "desc" },
@@ -15,7 +15,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session || !isAdmin(session)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
   const { kind, title, prompt, cadence, difficulty, strand, options, answer, starter, xp, dayKey, weekKey, monthKey, startsAt, endsAt, published } = body;
