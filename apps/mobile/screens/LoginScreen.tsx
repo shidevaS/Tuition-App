@@ -1,25 +1,21 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useAuth } from "@/App";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useAuth, type RootStackParamList } from "../App";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
-  const navigation = useNavigation();
+  const { login, loading } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, "Login">>();
 
   const handleLogin = async () => {
-    setLoading(true);
-    try {
-      await login({ email, password });
-      navigation.replace("Home");
-    } catch (error: any) {
-      Alert.alert("Login Failed", error.message || "Unknown error");
-    } finally {
-      setLoading(false);
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter both email and password");
+      return;
     }
+    if (await login({ email, password })) navigation.replace("Home");
   };
 
   return (
@@ -50,9 +46,11 @@ export default function LoginScreen() {
       </View>
 
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        <Text style={styles.buttonText}>
-          {loading ? "Signing in…" : "Sign In"}
-        </Text>
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.buttonText}>Sign In</Text>
+              )}
       </TouchableOpacity>
 
       <View style={styles.divider}>

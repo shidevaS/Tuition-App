@@ -1,26 +1,26 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useAuth } from "@/App";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useAuth, type RootStackParamList } from "../App";
 
 export default function RegisterScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigation = useNavigation();
-  const { register } = useAuth();
+  const { register, loading } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, "Register">>();
 
   const handleRegister = async () => {
-    setLoading(true);
-    try {
-      await register({ name, email, password });
-      navigation.replace("Home");
-    } catch (error: any) {
-      Alert.alert("Registration Failed", error.message || "Unknown error");
-    } finally {
-      setLoading(false);
+    if (!name || !email || !password) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
     }
+    if (password.length < 8) {
+      Alert.alert("Error", "Password must be at least 8 characters");
+      return;
+    }
+    if (await register({ name, email, password })) navigation.replace("Home");
   };
 
   return (
@@ -58,9 +58,11 @@ export default function RegisterScreen() {
       </View>
 
       <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-        <Text style={styles.buttonText}>
-          {loading ? "Creating account…" : "Create Account"}
-        </Text>
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.buttonText}>Create Account</Text>
+              )}
       </TouchableOpacity>
 
       <View style={styles.linkSection}>

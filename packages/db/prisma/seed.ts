@@ -3,19 +3,33 @@ import { hashPassword } from "../src/password";
 
 const prisma = new PrismaClient();
 
-const ADMIN_PASSWORD = "tuiton123";
-const STUDENT_PASSWORD = "tuiton123";
+function seedPassword(variable: string, localDefault: string): string {
+  const password = process.env[variable];
+  if (password) {
+    if (process.env.NODE_ENV === "production" && password.length < 12) {
+      throw new Error(`${variable} must be at least 12 characters in production`);
+    }
+    return password;
+  }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(`${variable} must be set before seeding a production database`);
+  }
+  return localDefault;
+}
+
+const ADMIN_PASSWORD = seedPassword("TUITON_ADMIN_PASSWORD", "tuiton123");
+const STUDENT_PASSWORD = seedPassword("TUITON_STUDENT_PASSWORD", "tuiton123");
 
 async function main() {
   // --- Admins ---
   const admins = [
-    { name: "Shivani Pal", email: "shivani@tuiton.app" },
+    { name: "Shivani Sharma", email: "shivani@tuiton.app" },
     { name: "Devendra Sharma", email: "devendra@tuiton.app" },
   ];
   for (const a of admins) {
     await prisma.user.upsert({
       where: { email: a.email },
-      update: { role: "ADMIN" },
+      update: { role: "ADMIN", passwordHash: hashPassword(ADMIN_PASSWORD) },
       create: {
         name: a.name,
         email: a.email,
@@ -30,7 +44,7 @@ async function main() {
   // --- Student ---
   await prisma.user.upsert({
     where: { email: "student@tuiton.app" },
-    update: {},
+    update: { passwordHash: hashPassword(STUDENT_PASSWORD) },
     create: {
       name: "Demo Student",
       email: "student@tuiton.app",

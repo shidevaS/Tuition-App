@@ -1,12 +1,15 @@
-import React, { useEffect } from "react";
-import { View, Text, StyleSheet, RefreshControl } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { useAuth } from "@/App";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useAuth, type RootStackParamList } from "../App";
+import { api } from "../lib/api";
 
 export default function HomeScreen() {
-  const { user } = useAuth();
-  const navigation = useNavigation();
-  const route = useRoute();
+  const { user, loading: authLoading } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, "Home">>();
+  const [stats, setStats] = useState({ lessonsCompleted: 0, activeChallenges: 0, xp: 0 });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // User loaded, navigate based on role
@@ -15,8 +18,36 @@ export default function HomeScreen() {
     }
   }, [user, navigation]);
 
-  if (!user) {
-    return null;
+  useEffect(() => {
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const result = await api.getDashboardData();
+      if (result.data) {
+        setStats({
+          lessonsCompleted: result.data.completedLessons || 0,
+          activeChallenges: result.data.activeChallenges || 0,
+          xp: result.data.xp || 0,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!user || authLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#10B981" />
+      </View>
+    );
   }
 
   return (
@@ -25,46 +56,30 @@ export default function HomeScreen() {
         <Text style={styles.welcome}>Welcome, {user.name}</Text>
       </View>
 
-      <View style={statsGrid}>
+      <View style={styles.statsGrid}>
         {/* Progress Card */}
-        <View style={statCard}>
-          <Text style={statLabel}>Lessons Completed</Text>
-          <Text style={statValue}>0</Text>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Lessons Completed</Text>
+          <Text style={styles.statValue}>{stats.lessonsCompleted}</Text>
         </View>
 
         {/* Challenges Card */}
-        <View style={statCard}>
-          <Text style={statLabel}>Active Challenges</Text>
-          <Text style={statValue}>0</Text>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Active Challenges</Text>
+          <Text style={styles.statValue}>{stats.activeChallenges}</Text>
         </View>
 
         {/* XP Card */}
-        <View style={statCard}>
-          <Text style={statLabel}>XP</Text>
-          <Text style={statValue}>0</Text>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>XP</Text>
+          <Text style={styles.statValue}>{stats.xp}</Text>
         </View>
       </View>
 
-      <View style={sections}>
-        <Text style={sectionTitle}>Quick Actions</Text>
-        {/* Lessons Button */}
-        <TouchableOpacity style={actionCard} onPress={() => navigation.navigate("Lessons")}>
-          <Text style={actionTitle}>View Lessons</Text>
-        </TouchableOpacity>
-
-        {/* Challenges Button */}
-        <TouchableOpacity style={actionCard} onPress={() => navigation.navigate("Challenges")}>
-          <Text style={actionTitle}>Challenges</Text>
-        </TouchableOpacity>
-
-        {/* Live Classes Button */}
-        <TouchableOpacity style={actionCard} onPress={() => navigation.navigate("LiveClasses")}>
-          <Text style={actionTitle}>Live Classes</Text>
-        </TouchableOpacity>
-
-        {/* Profile Button */}
-        <TouchableOpacity style={actionCard} onPress={() => navigation.navigate("Profile")}>
-          <Text style={actionTitle}>Profile</Text>
+      <View style={styles.sections}>
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <TouchableOpacity style={styles.actionCard} onPress={() => navigation.replace("Dashboard")}>
+          <Text style={styles.actionTitle}>Open Dashboard</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -72,6 +87,12 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#0F1729",
+  },
   container: {
     flex: 1,
     backgroundColor: "#0F1729",

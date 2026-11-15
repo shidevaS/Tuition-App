@@ -3,7 +3,7 @@ export const APP_TAGLINE = "Tuition meets the AI studio.";
 
 /** Admin accounts created by the seed script (Phase 1, dev). Change passwordHash via login flow. */
 export const SEED_ADMINS = [
-  { name: "Shivani Pal", email: "shivani@tuiton.app", role: "ADMIN" },
+  { name: "Shivani Sharma", email: "shivani@tuiton.app", role: "ADMIN" },
   { name: "Devendra Sharma", email: "devendra@tuiton.app", role: "ADMIN" },
 ] as const;
 

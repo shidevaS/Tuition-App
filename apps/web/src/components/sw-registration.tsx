@@ -5,35 +5,46 @@ import { useEffect } from "react";
 export function SWRegistration() {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
+      const onLoad = () => {
         navigator.serviceWorker
           .register('/sw.js')
           .then((registration) => {
             console.log('SW registered:', registration.scope);
 
-            // Check for updates periodically
-            setInterval(() => {
+            const intervalId = setInterval(() => {
               registration.update();
             }, 60 * 60 * 1000); // Every hour
 
-            // Listen for updates
-            registration.addEventListener('updatefound', () => {
+            const onUpdateFound = () => {
               const newWorker = registration.installing;
               if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
+                const onStateChange = () => {
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // New content available, show refresh prompt
                     showUpdatePrompt();
                   }
-                });
+                };
+                newWorker.addEventListener('statechange', onStateChange);
               }
-            });
+            };
+            registration.addEventListener('updatefound', onUpdateFound);
+
+            return () => {
+              clearInterval(intervalId);
+              registration.removeEventListener('updatefound', onUpdateFound);
+            };
           })
           .catch((error) => {
             console.log('SW registration failed:', error);
           });
-      });
+      };
+
+      window.addEventListener('load', onLoad);
+
+      return () => {
+        window.removeEventListener('load', onLoad);
+      };
     }
+    return undefined;
   }, []);
 
   const showUpdatePrompt = () => {

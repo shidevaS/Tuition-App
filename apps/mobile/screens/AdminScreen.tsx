@@ -1,46 +1,47 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, Button } from "react-native";
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from "react-native";
 import { useAuth } from "../App";
-import { prisma } from "@tuiton/db";
+import { api } from "../lib/api";
+
+type AdminStats = {
+  users: number;
+  students: number;
+  admins: number;
+  challenges: number;
+  submissions: number;
+  totalXP: number;
+};
 
 export default function AdminScreen() {
-  const { user } = useAuth();
-  const [stats, setStats] = useState(null);
-  const [loading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadStats = async () => {
-      if (!user?.sub) return;
-
-      const [users, challenges, submissions, lessons, xpLog] = await Promise.all([
-        prisma.user.findMany({ include: { profile: true } }),
-        prisma.challenge.count({ where: { published: true } }),
-        prisma.challengeSubmission.count(),
-        prisma.lesson.count(),
-        prisma.xpLog.findMany({ where: { reason: { startsWith: "Challenge" } } }),
-      ]);
-
-      const totalStudents = users.filter((u) => u.role === "STUDENT").length;
-      const totalAdmins = users.filter((u) => u.role === "ADMIN").length;
-      const totalXPSum = xpLog.reduce((sum, s) => sum + (s.amount || 0), 0);
-
-      setStats({
-        users: users.length,
-        students: totalStudents,
-        admins: totalAdmins,
-        challenges,
-        submissions,
-        totalXP: totalXPSum,
-      });
-    };
-
+    if (!user) return;
     loadStats();
-  }, [user?.sub]);
+  }, [user]);
 
-  if (loading || !stats) {
+  const loadStats = async () => {
+    setLoading(true);
+    try {
+      // For admin stats, we'll need to create an admin API endpoint
+      // For now, we'll use the existing dashboard data and supplement
+      const result = await api.getAdminDashboardData();
+      if (result.data) {
+        setStats(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to load admin stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (authLoading || loading || !stats) {
     return (
       <View style={styles.center}>
-        <Text>Loading admin data...</Text>
+        <ActivityIndicator size="large" color="#10B981" />
       </View>
     );
   }
@@ -54,43 +55,43 @@ export default function AdminScreen() {
         <Text style={styles.subtitle}>Platform Overview</Text>
       </View>
 
-      <View style={statsGrid}>
-        <View style={statCard}>
-          <Text style={statLabel}>Total Users</Text>
-          <Text style={statValue}>{users}</Text>
+      <View style={styles.statsGrid}>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Total Users</Text>
+          <Text style={styles.statValue}>{users}</Text>
         </View>
-        <View style={statCard}>
-          <Text style={statLabel}>Students</Text>
-          <Text style={statValue}>{students}</Text>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Students</Text>
+          <Text style={styles.statValue}>{students}</Text>
         </View>
-        <View style={statCard}>
-          <Text style={statLabel}>Admins</Text>
-          <Text style={statValue}>{admins}</Text>
-        </View>
-      </View>
-
-      <View style={statsGrid}>
-        <View style={statCard}>
-          <Text style={statLabel}>Challenges</Text>
-          <Text style={statValue}>{challenges}</Text>
-        </View>
-        <View style={statCard}>
-          <Text style={statLabel}>Submissions</Text>
-          <Text style={statValue}>{submissions}</Text>
-        </View>
-        <View style={statCard}>
-          <Text style={statLabel}>Total XP</Text>
-          <Text style={statValue}>{totalXP}+</Text>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Admins</Text>
+          <Text style={styles.statValue}>{admins}</Text>
         </View>
       </View>
 
-      <View style={roadmapSection}>
-        <Text style={roadmapTitle}>Next Phases</Text>
-        <View style={roadmapItems}>
+      <View style={styles.statsGrid}>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Challenges</Text>
+          <Text style={styles.statValue}>{challenges}</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Submissions</Text>
+          <Text style={styles.statValue}>{submissions}</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Total XP</Text>
+          <Text style={styles.statValue}>{totalXP}+</Text>
+        </View>
+      </View>
+
+      <View style={styles.roadmapSection}>
+        <Text style={styles.roadmapTitle}>Next Phases</Text>
+        <View style={styles.roadmapItems}>
           {[["P2", "Roadmaps & content library"], ["P3", "Live classes (Jitsi)"], ["P4", "Challenges & XP"], ["P5", "Profile & community"], ["P6", "Polish, mobile, launch"]].map(([n, t]) => (
-            <View key={n} style={roadmapItem}>
-              <Text style={roadmapBadge}>{n}</Text>
-              <Text style={roadmapText}>{t}</Text>
+            <View key={n} style={styles.roadmapItem}>
+              <Text style={styles.roadmapBadge}>{n}</Text>
+              <Text style={styles.roadmapText}>{t}</Text>
             </View>
           ))}
         </View>
@@ -100,6 +101,11 @@ export default function AdminScreen() {
 }
 
 const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "#0F1729",

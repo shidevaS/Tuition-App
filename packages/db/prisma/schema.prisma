@@ -75,6 +75,7 @@ model Roadmap {
   pillar      String // subjects | innovation
   title       String
   tagline     String
+  description String?
   grade       String? // e.g. "6–10"
   color       String   @default("#166534")
   xpTotal     Int      @default(0) // sum of lesson XP (cached)

@@ -4,7 +4,7 @@
     "strict": true,
     "paths": {
       "@tuiton/shared": ["../../packages/shared/src"],
-      "@": ["."]
+      "@/*": ["./*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"]

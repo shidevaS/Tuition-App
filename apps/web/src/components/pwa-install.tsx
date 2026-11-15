@@ -13,27 +13,34 @@ export function PWAInstallPrompt() {
     // Check if already installed
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     const isInWebAppiOS = (window.navigator as any).standalone === true;
+
     if (isStandalone || isInWebAppiOS) {
       setIsInstalled(true);
-      return;
+      return undefined;
     }
 
-    const handler = (e: Event) => {
+    let handler: ((e: Event) => void) | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setShowPrompt(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('beforeinstallprompt', handler!);
 
-    // Also show after a delay if the event already fired
-    const timer = setTimeout(() => {
+    timer = setTimeout(() => {
       if (!deferredPrompt) setShowPrompt(true);
     }, 5000);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-      clearTimeout(timer);
+      if (handler) {
+        window.removeEventListener('beforeinstallprompt', handler);
+      }
+      if (timer) {
+        clearTimeout(timer);
+      }
     };
   }, [deferredPrompt]);
 

@@ -1,61 +1,89 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, StyleSheet, RefreshControl } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { useAuth } from "@/App";
-import { prisma } from "@tuiton/db";
+import { View, Text, ScrollView, StyleSheet, RefreshControl, ActivityIndicator } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useAuth, type RootStackParamList } from "../App";
+import { api } from "../lib/api";
 
 export default function DashboardScreen() {
-  const { user } = useAuth();
-  const navigation = useNavigation();
-  const route = useRoute();
+  const { user, loading: authLoading } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, "Dashboard">>();
+
+  const [progress, setProgress] = useState<any[]>([]);
+  const [challenges, setChallenges] = useState<any[]>([]);
+  const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [xp, setXp] = useState(0);
+  const [xpLogs, setXpLogs] = useState<any[]>([]);
+  const [totalLessons, setTotalLessons] = useState(0);
+  const [totalChallenges, setTotalChallenges] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) navigation.replace("Login");
   }, [user, navigation]);
 
-  if (!user) {
-    return null;
-  }
-
-  const [progress, setProgress] = useState([]);
-  const [challenges, setChallenges] = useState([]);
-  const [enrollments, setEnrollments] = useState([]);
-  const [xp, setXp] = useState(0);
-  const [xpLogs, setXpLogs] = useState([]);
-  const [totalLessons, setTotalLessons] = useState(0);
-  const [totalChallenges, setTotalChallenges] = useState(0);
-
   useEffect(() => {
-    const loadData = async () => {
-      if (!user?.sub) return;
+    if (user) {
+      loadData();
+    }
+  }, [user]);
 
-      const [prog, chall, enroll, xpLog] = await Promise.all([
-        prisma.lessonProgress.findMany({ where: { userId: user.sub }, select: { lessonId: true, completed: true, xpTaken: true } }),
-        prisma.challenge.findMany({ where: { published: true }, take: 5, orderBy: { createdAt: "desc" } }),
-        prisma.courseEnrollment.findMany({ where: { userId: user.sub }, select: { courseId: true, progress: true, completed: true } }),
-        prisma.xpLog.findMany({ where: { userId: user.sub }, orderBy: { createdAt: "desc" }, take: 5 }),
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [prog, chall, enroll, xpLog, lessonsCount, challengesCount] = await Promise.all([
+        api.getDashboardData().then(r => r.data?.lessonProgress || []),
+        api.getChallenges().then(r => r.data || []),
+        api.getCourses().then(r => r.data || []),
+        api.getProfile().then(r => r.data?.xpLogs || []),
+        api.getDashboardData().then(r => r.data?.totalLessons || 0),
+        api.getDashboardData().then(r => r.data?.totalChallenges || 0),
       ]);
 
       setProgress(prog);
       setChallenges(chall);
       setEnrollments(enroll);
-      setXp(xpLog.reduce((sum, log) => sum + (log.amount || 0), 0));
+      setXp(xpLog.reduce((sum: number, log: any) => sum + (log.amount || 0), 0));
       setXpLogs(xpLog);
-      setTotalLessons(await prisma.lesson.count());
-      setTotalChallenges(await prisma.challenge.count({ where: { published: true } }));
-    };
+      setTotalLessons(lessonsCount);
+      setTotalChallenges(challengesCount);
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadData();
-  }, [user?.sub]);
+  if (!user || authLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#10B981" />
+      </View>
+    );
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#10B981" />
+      </View>
+    );
+  }
 
   const completedCount = progress.filter((p) => p.completed).length;
 
   return (
-    <ScrollView style={styles.scroll} refreshControl={{
-      colors: ["#10B981"],
-      size: "small",
-      onRefresh: () => {},
-    }}>
+    <ScrollView
+      style={styles.scroll}
+      refreshControl={
+        <RefreshControl
+          refreshing={loading}
+          onRefresh={loadData}
+          tintColor="#10B981"
+          colors={["#10B981"]}
+        />
+      }
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Dashboard</Text>
         <Text style={styles.subtitle}>Welcome back, {user.name}</Text>
@@ -85,9 +113,9 @@ export default function DashboardScreen() {
         ) : (
           <View style={styles.enrollmentsList}>
             {enrollments.map((e, i) => (
-              <View key={i} style={styleEnrollment}>
-                <Text style={styleEnrollmentTitle}>Course {e.courseId}</Text>
-                <Text style={styleEnrollmentSub}>{e.progress}% complete</Text>
+              <View key={i} style={styles.styleEnrollment}>
+                <Text style={styles.styleEnrollmentTitle}>Course {e.courseId || e.id}</Text>
+                <Text style={styles.styleEnrollmentSub}>{e.progress || 0}% complete</Text>
               </View>
             ))}
           </View>
@@ -102,9 +130,9 @@ export default function DashboardScreen() {
         ) : (
           <View style={styles.xpLogsList}>
             {xpLogs.map((log, i) => (
-              <View key={i} style={styleXpLog}>
-                <Text style={styleXpLogText}>{log.reason}</Text>
-                <Text style={styleXpLogAmount}>+{log.amount} XP</Text>
+              <View key={i} style={styles.styleXpLog}>
+                <Text style={styles.styleXpLogText}>{log.reason || log.action}</Text>
+                <Text style={styles.styleXpLogAmount}>+{log.amount} XP</Text>
               </View>
             ))}
           </View>
@@ -115,6 +143,12 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#0F1729",
+  },
   scroll: {
     flexGrow: 1,
     backgroundColor: "#0F1729",
