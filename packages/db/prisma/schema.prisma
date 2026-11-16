@@ -1,6 +1,6 @@
-// SQLite in dev; switch `provider` to "postgresql" + a Postgres DATABASE_URL for production.
+// PostgreSQL for production (Supabase)
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
