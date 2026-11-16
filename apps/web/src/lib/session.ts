@@ -7,11 +7,12 @@ export const ADMIN_EMAILS = new Set(["shivani@tuiton.app", "devendra@tuiton.app"
 
 /** Write a signed session cookie for the given actor. */
 export async function createSession(actor: Omit<SessionUser, "iat" | "exp">): Promise<string> {
+  const cookieStore = cookies();
   const token = await signSession(actor);
-  cookies().set(SESSION_COOKIE, token, {
+  cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax" as const,
+    sameSite: "lax",
     path: "/",
     maxAge: SESSION_MAX_AGE,
   });
@@ -20,16 +21,27 @@ export async function createSession(actor: Omit<SessionUser, "iat" | "exp">): Pr
 
 /** Read and verify the current request's session cookie, or null. */
 export async function getSession(): Promise<SessionUser | null> {
-  const authorization = headers().get("authorization");
-  const bearerToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
-  const token = bearerToken ?? cookies().get(SESSION_COOKIE)?.value;
+  let token: string | undefined;
+  try {
+    const authorization = headers().get("authorization");
+    const bearerToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
+    const cookieStore = cookies();
+    token = bearerToken ?? cookieStore.get(SESSION_COOKIE)?.value;
+  } catch {
+    return null;
+  }
   if (!token) return null;
   return verifySession(token);
 }
 
 /** Clear the session cookie (logout). */
 export async function destroySession(): Promise<void> {
-  cookies().set(SESSION_COOKIE, "", { ...cookieOptions(), maxAge: 0 });
+  try {
+    const cookieStore = cookies();
+    cookieStore.delete(SESSION_COOKIE);
+  } catch {
+    // Cookie store unavailable in this context; ignore.
+  }
 }
 
 /** Check whether a session belongs to one of the designated admins. */
