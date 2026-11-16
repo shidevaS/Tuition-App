@@ -23,7 +23,22 @@
     }
   ],
   "categories": ["education", "productivity", "utilities"],
-  "screenshots": [],
+  "screenshots": [
+  {
+    "src": "/icons/icon.svg",
+    "sizes": "1280x720",
+    "type": "image/svg+xml",
+    "form_factor": "wide",
+    "label": "Tuiton Academy - Dashboard"
+  },
+  {
+    "src": "/icons/icon.svg",
+    "sizes": "750x1334",
+    "type": "image/svg+xml",
+    "form_factor": "narrow",
+    "label": "Tuiton Academy - Mobile"
+  }
+],
   "shortcuts": [
     {
       "name": "Dashboard",

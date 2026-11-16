@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { APP_NAME, APP_TAGLINE } from "@tuiton/shared";
 import "./globals.css";
-
 export const metadata: Metadata = {
   title: {
     default: `${APP_NAME} — ${APP_TAGLINE}`,

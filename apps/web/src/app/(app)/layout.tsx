@@ -8,6 +8,8 @@ import { NotificationsBell } from "@/components/notifications-bell";
 import { SWRegistration } from "@/components/sw-registration";
 import { PWAInstallPrompt } from "@/components/pwa-install";
 import { AppNavigation } from "@/components/app-navigation";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { GlobalErrorHandler } from "@/components/global-error-handler";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const session = await getSession();
@@ -19,6 +21,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col">
       <SWRegistration />
       <PWAInstallPrompt />
+      <GlobalErrorHandler />
       <header className="sticky top-0 z-20 border-b border-border bg-[rgb(var(--card))]">
         <nav className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-5">
           <div className="flex min-w-0 items-center gap-4">
@@ -36,7 +39,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         </nav>
       </header>
       <main className="flex-1">
-        <div className="mx-auto w-full max-w-6xl px-5 py-8">{children}</div>
+        <ErrorBoundary>
+          <div className="mx-auto w-full max-w-6xl px-5 py-8">{children}</div>
+        </ErrorBoundary>
       </main>
     </div>
   );
