@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { APP_NAME, APP_TAGLINE } from "@tuiton/shared";
 import "./globals.css";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { GlobalErrorHandler } from "@/components/global-error-handler";
+
 export const metadata: Metadata = {
   title: {
     default: `${APP_NAME} — ${APP_TAGLINE}`,
@@ -34,7 +37,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <meta name="apple-mobile-web-app-title" content="Tuiton" />
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
-        {children}
+        <GlobalErrorHandler />
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
       </body>
     </html>
   );
