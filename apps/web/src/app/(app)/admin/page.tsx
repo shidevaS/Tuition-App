@@ -4,8 +4,11 @@ import { prisma } from "@tuiton/db";
 import { getSession, isAdmin } from "@/lib/session";
 import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 import { AdminNotificationSender } from "./AdminNotificationSender";
+import type { User, StudentProfile } from "@prisma/client";
 
 export const metadata: Metadata = { title: "Admin console" };
+
+type UserWithProfile = User & { profile: StudentProfile | null };
 
 export default async function AdminPage() {
   const session = await getSession();
@@ -16,7 +19,7 @@ export default async function AdminPage() {
     prisma.user.findMany({ orderBy: { createdAt: "desc" }, include: { profile: true } }),
     prisma.challengeSubmission.count(),
     prisma.challenge.count(),
-  ]);
+  ]) as [UserWithProfile[], number, number];
 
   const admins = users.filter((u) => u.role === "ADMIN");
   const students = users.filter((u) => u.role === "STUDENT");
