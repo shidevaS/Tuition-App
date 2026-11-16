@@ -330,7 +330,7 @@ async function main() {
       description: "Live walkthrough of factor theorem with examples + Q&A",
       roadmapId: mathRm.id,
       hostId: admin!.id,
-      hostName: "Shivani Pal",
+      hostName: "Shivani Sharma",
       startsAt: tmrw,
       durationMin: 60,
       roomName: "tuiton-math-algebra-1",
@@ -362,7 +362,7 @@ async function main() {
       description: "ReAct loop + tool calling — we'll ship a working agent in 60 min",
       roadmapId: aiAgentsRm.id,
       hostId: admin!.id,
-      hostName: "Shivani Pal",
+      hostName: "Shivani Sharma",
       startsAt: new Date(nextWeek.getTime() + 2 * 24 * 60 * 60 * 1000),
       durationMin: 60,
       roomName: "tuiton-agents-1",
@@ -500,6 +500,282 @@ async function main() {
   });
 
   console.log("✓ challenges seeded");
+
+  // =====================================================================
+  // PHASE 4.5: COURSES (Core Subjects + AI + Coding)
+  // =====================================================================
+
+  async function course(data: any) {
+    await prisma.course.upsert({
+      where: { slug: data.slug },
+      update: data,
+      create: data,
+    });
+  }
+
+  // --- CORE SUBJECTS: MATHEMATICS ---
+  await course({
+    slug: "math-algebra-foundations",
+    title: "Algebra: Foundations to Mastery",
+    description: "From linear equations to quadratic formulas — build rock-solid algebra skills with step-by-step lessons, AI hints, and practice challenges.",
+    kind: "secondary",
+    tier: "FREE",
+    price: null,
+    durationWeeks: 12,
+    subjectArea: "math",
+    gradeLevel: "9–10",
+    prerequisites: JSON.stringify([]),
+    learningObjectives: JSON.stringify([
+      "Solve linear and quadratic equations",
+      "Work with polynomials and factoring",
+      "Graph functions and interpret transformations",
+      "Apply algebra to real-world word problems",
+    ]),
+    mediaUrl: "https://www.youtube.com/watch?v=example_algebra",
+    xpAwarded: 100,
+    isPublished: true,
+  });
+
+  await course({
+    slug: "math-geometry-visual",
+    title: "Geometry: Shapes, Proofs & Space",
+    description: "Euclidean geometry made visual — triangles, circles, proofs, and constructions with interactive diagrams.",
+    kind: "secondary",
+    tier: "FREE",
+    price: null,
+    durationWeeks: 10,
+    subjectArea: "math",
+    gradeLevel: "9–10",
+    prerequisites: JSON.stringify(["math-algebra-foundations"]),
+    learningObjectives: JSON.stringify([
+      "Prove triangle congruence and similarity",
+      "Work with circle theorems and tangents",
+      "Perform geometric constructions",
+      "Calculate area, volume, and surface area",
+    ]),
+    mediaUrl: "https://www.youtube.com/watch?v=example_geometry",
+    xpAwarded: 90,
+    isPublished: true,
+  });
+
+  // --- CORE SUBJECTS: SCIENCE ---
+  await course({
+    slug: "science-physics-mechanics",
+    title: "Physics: Mechanics & Motion",
+    description: "Newton's laws, energy, momentum, and waves — with simulations and AI-guided problem solving.",
+    kind: "secondary",
+    tier: "FREE",
+    price: null,
+    durationWeeks: 12,
+    subjectArea: "science",
+    gradeLevel: "9–10",
+    prerequisites: JSON.stringify([]),
+    learningObjectives: JSON.stringify([
+      "Apply Newton's three laws of motion",
+      "Calculate work, energy, and power",
+      "Understand momentum and collisions",
+      "Analyze wave properties and sound",
+    ]),
+    mediaUrl: "https://www.youtube.com/watch?v=example_physics",
+    xpAwarded: 110,
+    isPublished: true,
+  });
+
+  await course({
+    slug: "science-chemistry-matter",
+    title: "Chemistry: Matter & Reactions",
+    description: "Atomic structure, chemical bonding, stoichiometry, and reaction types with virtual labs.",
+    kind: "secondary",
+    tier: "FREE",
+    price: null,
+    durationWeeks: 10,
+    subjectArea: "science",
+    gradeLevel: "9–10",
+    prerequisites: JSON.stringify([]),
+    learningObjectives: JSON.stringify([
+      "Understand atomic structure and periodic trends",
+      "Balance chemical equations",
+      "Calculate stoichiometry and molarity",
+      "Identify reaction types and predict products",
+    ]),
+    mediaUrl: "https://www.youtube.com/watch?v=example_chemistry",
+    xpAwarded: 100,
+    isPublished: true,
+  });
+
+  // --- CORE SUBJECTS: ENGLISH ---
+  await course({
+    slug: "english-lit-composition",
+    title: "English: Literature & Composition",
+    description: "Classic literature, essay writing, grammar, and critical analysis with AI writing feedback.",
+    kind: "secondary",
+    tier: "FREE",
+    price: null,
+    durationWeeks: 12,
+    subjectArea: "english",
+    gradeLevel: "9–10",
+    prerequisites: JSON.stringify([]),
+    learningObjectives: JSON.stringify([
+      "Analyze themes in classic and modern literature",
+      "Write structured essays with thesis and evidence",
+      "Master grammar, syntax, and style",
+      "Deliver confident oral presentations",
+    ]),
+    mediaUrl: "https://www.youtube.com/watch?v=example_english",
+    xpAwarded: 90,
+    isPublished: true,
+  });
+
+  // --- CORE SUBJECTS: SOCIAL STUDIES ---
+  await course({
+    slug: "sst-civics-economics",
+    title: "Social Studies: Civics & Economics",
+    description: "Government, constitution, markets, and personal finance — understand how society works.",
+    kind: "secondary",
+    tier: "FREE",
+    price: null,
+    durationWeeks: 10,
+    subjectArea: "sst",
+    gradeLevel: "9–10",
+    prerequisites: JSON.stringify([]),
+    learningObjectives: JSON.stringify([
+      "Understand the Constitution and branches of government",
+      "Explain supply, demand, and market structures",
+      "Manage personal finance and budgeting",
+      "Analyze current events through a civic lens",
+    ]),
+    mediaUrl: "https://www.youtube.com/watch?v=example_sst",
+    xpAwarded: 80,
+    isPublished: true,
+  });
+
+  // --- AI & INNOVATION: AI FOUNDATIONS ---
+  await course({
+    slug: "ai-llm-engineering",
+    title: "AI: LLM Engineering & Applications",
+    description: "Build with large language models — prompt engineering, fine-tuning, RAG, and agentic workflows.",
+    kind: "certification",
+    tier: "FREE",
+    price: null,
+    durationWeeks: 8,
+    subjectArea: "ai-fundamentals",
+    gradeLevel: "9–12",
+    prerequisites: JSON.stringify(["python-coding-basics"]),
+    learningObjectives: JSON.stringify([
+      "Understand transformer architecture and attention",
+      "Design effective prompts for LLMs",
+      "Build RAG pipelines with vector databases",
+      "Create autonomous agents with tool use",
+    ]),
+    mediaUrl: "https://www.youtube.com/watch?v=example_llm",
+    xpAwarded: 150,
+    isPublished: true,
+  });
+
+  await course({
+    slug: "ai-computer-vision",
+    title: "AI: Computer Vision & Image AI",
+    description: "Convolutional networks, object detection, image generation, and OpenCV — build vision-powered apps.",
+    kind: "certification",
+    tier: "FREE",
+    price: null,
+    durationWeeks: 8,
+    subjectArea: "ai-fundamentals",
+    gradeLevel: "9–12",
+    prerequisites: JSON.stringify(["python-coding-basics", "ai-llm-engineering"]),
+    learningObjectives: JSON.stringify([
+      "Understand CNN architecture and layers",
+      "Train image classification models",
+      "Implement object detection with YOLO",
+      "Generate images with diffusion models",
+    ]),
+    mediaUrl: "https://www.youtube.com/watch?v=example_cv",
+    xpAwarded: 150,
+    isPublished: true,
+  });
+
+  // --- CODING: PYTHON ---
+  await course({
+    slug: "python-coding-basics",
+    title: "Python: From Zero to Builder",
+    description: "First programming language — variables, loops, functions, data structures, and building real scripts.",
+    kind: "certification",
+    tier: "FREE",
+    price: null,
+    durationWeeks: 10,
+    subjectArea: "coding",
+    gradeLevel: "7–12",
+    prerequisites: JSON.stringify([]),
+    learningObjectives: JSON.stringify([
+      "Write clean Python code with variables and types",
+      "Use control flow: conditionals, loops, comprehensions",
+      "Work with lists, dictionaries, sets, and tuples",
+      "Build CLI tools and automate tasks",
+    ]),
+    mediaUrl: "https://www.youtube.com/watch?v=example_python",
+    xpAwarded: 120,
+    isPublished: true,
+  });
+
+  await course({
+    slug: "web-dev-html-css-js",
+    title: "Web Development: HTML, CSS & JavaScript",
+    description: "Build responsive, interactive websites — from static pages to dynamic web apps with vanilla JS.",
+    kind: "certification",
+    tier: "FREE",
+    price: null,
+    durationWeeks: 10,
+    subjectArea: "coding",
+    gradeLevel: "8–12",
+    prerequisites: JSON.stringify([]),
+    learningObjectives: JSON.stringify([
+      "Write semantic HTML5 and modern CSS3",
+      "Build responsive layouts with Flexbox and Grid",
+      "Add interactivity with vanilla JavaScript",
+      "Fetch APIs and handle asynchronous data",
+    ]),
+    mediaUrl: "https://www.youtube.com/watch?v=example_web",
+    xpAwarded: 130,
+    isPublished: true,
+  });
+
+  // --- CODING: NEXT.JS / REACT ---
+  await course({
+    slug: "react-nextjs-apps",
+    title: "React & Next.js: Modern Web Apps",
+    description: "Component-based UIs with React, server-side rendering with Next.js, and full-stack app deployment.",
+    kind: "certification",
+    tier: "FREE",
+    price: null,
+    durationWeeks: 10,
+    subjectArea: "coding",
+    gradeLevel: "9–12",
+    prerequisites: JSON.stringify(["web-dev-html-css-js"]),
+    learningObjectives: JSON.stringify([
+      "Build component-based UIs with React hooks",
+      "Implement routing and state management",
+      "Create server-side rendered pages with Next.js",
+      "Deploy full-stack applications to production",
+    ]),
+    mediaUrl: "https://www.youtube.com/watch?v=example_react",
+    xpAwarded: 160,
+    isPublished: true,
+  });
+
+  console.log("✓ courses seeded");
+
+  // Enroll student in free courses
+  for (const slug of ["math-algebra-foundations", "science-physics-mechanics", "python-coding-basics", "ai-llm-engineering"]) {
+    const c = await prisma.course.findUnique({ where: { slug } });
+    if (c) {
+      await prisma.courseEnrollment.upsert({
+        where: { userId_courseId: { userId: student!.id, courseId: c.id } },
+        update: { progress: Math.floor(Math.random() * 40) + 10 },
+        create: { userId: student!.id, courseId: c.id, progress: Math.floor(Math.random() * 40) + 10 },
+      });
+    }
+  }
+  console.log("✓ student enrolled in courses");
 
   // --- Badges ---
   const Badges = [
