@@ -338,6 +338,68 @@ model ForumComment {
   createdAt DateTime @default(now())
 }
 
+// --- New: Daily Topic System (Phase 9) ---
+
+model DailyTopic {
+  id          String   @id @default(cuid())
+  title       String
+  summary     String // bite-sized description
+  kind        String   // SCIENCE | LOGIC | CODING | AI | MATH
+  difficulty  String   // BEGINNER | INTERMEDIATE | ADVANCED
+  content     String?  // markdown or rich content
+  xp          Int      @default(10)
+  order       Int      @default(0)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  // For the "1 New Topic Every Day" feature
+  dayKey      String?  // yyyymmdd format - exactly one per day
+  expiresAt   DateTime // when this topic expires/unlocks next
+
+  @@unique([dayKey])
+  @@map("daily_topic")
+}
+
+// --- New: Mentorship Request System (Phase 9) ---
+
+model MentorshipRequest {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    String   // "subject", "ai", "personal", "other"
+  title       String   // e.g. "Need help with quadratic equations"
+  description String   // detailed request
+  status      String   @default("OPEN") // OPEN | IN_PROGRESS | RESOLVED | CLOSED
+  priority    String   @default("MEDIUM") // LOW | MEDIUM | HIGH
+  assignedTo  String?  // mentor/admin userId
+  assignedAt  DateTime?
+  resolvedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, category, title])
+  @@map("mentorship_request")
+}
+
+// --- New: Messaging System (Phase 9) ---
+
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String
+  sender      User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId  String
+  receiver    User     @relation(fields: [receiverId], references: [id], onDelete: Cascade)
+  content     String
+  type        String   // "direct", "announcement", "system"
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([receiverId, read])
+  @@index([senderId, createdAt])
+  @@map("message")
+}
+
+// --- Updated: Notification types expansion ---
+
 model Notification {
   id        String   @id @default(cuid())
   userId    String
@@ -346,9 +408,11 @@ model Notification {
   body      String
   href      String?
   read      Boolean  @default(false)
-  type      String   // challenge, course, certification, competition, system, course_enrollment, competition_result, ai_interaction
-  relatedId String? // ID of related resource (challenge, course, certification, competition, etc.)
+  type      String   // challenge, course, certification, competition, system, course_enrollment, competition_result, ai_interaction, mentorship_request, message, daily_topic
+  relatedId String? // ID of related resource
   createdAt DateTime @default(now())
+
+  @@map("notification")
 }
 
 model SupportRequest {

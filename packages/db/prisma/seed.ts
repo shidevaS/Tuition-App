@@ -889,6 +889,8 @@ async function main() {
     { title: "Welcome to Tuiton!", body: "Start with a daily challenge or join a live class.", href: "/dashboard", type: "system" },
     { title: "New AI Agent roadmap live", body: "Build autonomous agents — 4 modules, 12 lessons.", href: "/roadmaps/ai-agents-building", type: "course" },
     { title: "Your certificate is ready", body: "AI Foundations Certificate earned!", href: "/profile", type: "certification" },
+    { title: "New daily topic unlocked", body: "Check out today's bite-sized topic on the dashboard", href: "/daily-topics", type: "daily_topic" },
+    { title: "Mentorship request submitted", body: "Your request for help has been sent to a mentor", href: "/mentorship", type: "mentorship_request" },
   ]) {
     await prisma.notification.create({ data: { userId: student!.id, ...n } });
   }
@@ -907,6 +909,78 @@ async function main() {
     },
   });
   console.log("✓ support request seeded");
+
+  // --- Daily Topics ---
+  const today = new Date();
+  const currentDayKey = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
+
+  await prisma.dailyTopic.upsert({
+    where: { dayKey: currentDayKey },
+    update: {},
+    create: {
+      title: "Today's Science: Photosynthesis",
+      summary: "How plants convert sunlight to energy — the basics of life on Earth",
+      kind: "SCIENCE",
+      difficulty: "BEGINNER",
+      content: "Photosynthesis is the process by which plants use sunlight, water, and carbon dioxide to create oxygen and energy in the form of sugar. The equation: 6CO₂ + 6H₂O + light energy → C₆H₁₂O₆ + 6O₂.",
+      xp: 10,
+      order: 1,
+      published: true,
+      dayKey: currentDayKey,
+      expiresAt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+    },
+  });
+
+  // Yesterday's topic (for streak tracking)
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayKey = `${yesterday.getFullYear()}${String(yesterday.getMonth() + 1).padStart(2, "0")}${String(yesterday.getDate()).padStart(2, "0")}`;
+
+  await prisma.dailyTopic.upsert({
+    where: { dayKey: yesterdayKey },
+    update: {},
+    create: {
+      title: "Yesterday's Logic: Pattern Recognition",
+      summary: "Spotting patterns is the foundation of mathematical reasoning",
+      kind: "LOGIC",
+      difficulty: "BEGINNER",
+      content: "A pattern is a regularity in the world, in human-made design, or in abstract ideas. For example, the sequence 2, 4, 6, 8, ... follows the pattern 'add 2'. Recognizing patterns helps us predict what comes next and is crucial for problem-solving.",
+      xp: 10,
+      order: 2,
+      published: true,
+      dayKey: yesterdayKey,
+      expiresAt: new Date(today.getTime()),
+    },
+  });
+
+  // --- Mentorship Requests ---
+  await prisma.mentorshipRequest.upsert({
+    where: { id: "req-1" },
+    update: {},
+    create: {
+      userId: student!.id,
+      category: "subject",
+      title: "Need help with quadratic equations",
+      description: "I'm struggling to understand how to factor quadratic equations and solve for x. Can someone explain the step-by-step process?",
+      status: "OPEN",
+      priority: "HIGH",
+    },
+  });
+
+  await prisma.mentorshipRequest.upsert({
+    where: { id: "req-2" },
+    update: {},
+    create: {
+      userId: student!.id,
+      category: "ai",
+      title: "Understanding prompt engineering basics",
+      description: "I want to learn how to write effective prompts for AI assistants. Can someone guide me through the key patterns and principles?",
+      status: "OPEN",
+      priority: "MEDIUM",
+    },
+  });
+
+  console.log("✓ daily topics & mentorship requests seeded");
 
   console.log("\n=== Seed complete ===");
 }
